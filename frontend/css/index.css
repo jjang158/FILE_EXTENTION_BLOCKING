@@ -1,0 +1,145 @@
+:root {
+    --primary-color: #4CAF50;
+    --danger-color: #f44336;
+    --border-color: #ddd;
+    --bg-color: #f9f9f9;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f0f2f5;
+    margin: 0;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+}
+
+.container {
+    background: white;
+    width: 100%;
+    max-width: 630px;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+header {
+    margin-bottom: 30px;
+    border-bottom: 2px solid var(--primary-color);
+    padding-bottom: 10px;
+}
+
+h1 {
+    margin: 0;
+    font-size: 24px;
+    color: #333;
+}
+
+.subtitle {
+    color: #666;
+    font-size: 14px;
+    margin-top: 5px;
+}
+
+.policy-section {
+    margin-bottom: 30px;
+}
+
+h2 {
+    font-size: 16px;
+    margin-bottom: 15px;
+    color: #444;
+}
+
+/* Fixed Extensions */
+.fixed-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.checkbox-label input {
+    margin-right: 5px;
+    transform: scale(1.2);
+}
+
+/* Custom Extensions */
+.input-group {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+#custom-input {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    background-color: #aaa;
+    /* Default gray */
+    color: white;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background 0.3s;
+}
+
+.btn:hover {
+    background-color: #888;
+}
+
+.btn.primary {
+    background-color: var(--primary-color);
+}
+
+.info-text {
+    font-size: 12px;
+    color: #888;
+    margin-bottom: 10px;
+    text-align: right;
+}
+
+.custom-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    border: 1px solid var(--border-color);
+    padding: 10px;
+    min-height: 100px;
+    border-radius: 4px;
+    align-content: flex-start;
+}
+
+.tag {
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 5px 10px;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.tag .close {
+    cursor: pointer;
+    color: #999;
+    font-weight: bold;
+}
+
+.tag .close:hover {
+    color: var(--danger-color);
+}

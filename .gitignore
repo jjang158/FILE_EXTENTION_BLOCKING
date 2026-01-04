@@ -1,0 +1,32 @@
+# .gitignore 설정
+.classpath
+.project
+.settings/
+.vscode/
+.idea/
+*.iml
+build/
+bin/
+out/
+target/
+.gradle/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Docker
+docker-compose.override.yml
+
+# Environment variables
+.env
+
+# CERT - IMPORTANT
+certbot/conf/live/
+certbot/conf/archive/
+certbot/conf/keys/
+certbot/work/
+certbot/logs/
+*.pem
+*.key
+ *.crt

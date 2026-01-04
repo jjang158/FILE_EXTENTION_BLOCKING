@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📁 업무 공유 기능 확장자 차단 테스트</title>
+    <link rel="stylesheet" href="css/test.css">
+</head>
+
+<body>
+    <div class="test-container">
+        <a href="index.html" class="nav-link">← 차단 관리 페이지로 돌아가기</a>
+
+        <header>
+            <h1>📁 업무 공유 기능 확장자 차단 테스트</h1>
+            <p class="subtitle">업무 공유 기능에서 업로드 가능한 파일 확장자를 테스트합니다.</p>
+            <p style="margin-top: 15px;">
+                <a href="test-chat.html" style="color: #4CAF50; text-decoration: none;">💬 채팅 기능 확장자 차단 테스트 →</a>
+            </p>
+        </header>
+
+        <div id="policy-summary" class="policy-summary">
+            <h3>현재 차단 중인 확장자</h3>
+            <div id="blocked-extensions" class="blocked-list">
+                <p style="color: #666;">로딩 중...</p>
+            </div>
+        </div>
+
+        <div id="upload-zone" class="upload-zone">
+            <div class="upload-icon">📁</div>
+            <h2>파일을 드래그하거나 클릭하여 선택하세요</h2>
+            <p style="color: #666; margin-top: 10px;">파일이 차단되는지 실시간으로 확인할 수 있습니다</p>
+            <label for="file-input" class="file-input-label">파일 선택</label>
+            <input type="file" id="file-input" multiple>
+        </div>
+
+        <div class="results">
+            <h2>검사 결과</h2>
+            <div id="results-container">
+                <p style="color: #666;">파일을 선택하면 검사 결과가 여기에 표시됩니다.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts at the end of body -->
+    <script src="script/constants.js"></script>
+    <script>
+        const NAMESPACE = 'work'; // 업무 공유 시나리오
+    </script>
+    <script src="script/test.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>파일 확장자 차단 (File Extension Blocker)</title>
+    <link rel="stylesheet" href="css/index.css">
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>파일 확장자 차단</h1>
+            <p class="subtitle">파일 확장자에 따라 특정 형식의 파일을 첨부하거나 전송하지 못하도록 제한합니다.</p>
+
+            <!-- Test Page Links -->
+            <div style="margin-top: 15px;">
+                <span style="font-weight: bold;">테스트 페이지:</span>
+                <a href="test-chat.html" style="color: #4CAF50; text-decoration: none; margin-left: 10px;">💬 채팅 기능 확장자
+                    차단 테스트</a>
+                <span style="margin: 0 5px;">|</span>
+                <a href="test-work.html" style="color: #2196F3; text-decoration: none;">📁 업무 공유 기능 확장자 차단 테스트</a>
+            </div>
+        </header>
+
+
+        <!-- Scenario Selector -->
+        <div class="scenario-selector" style="margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+            <label for="scenario-select" style="font-weight: bold; margin-right: 10px;">🎯 시나리오 선택:</label>
+            <select id="scenario-select"
+                style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
+                <option value="chat">💬 채팅 기능</option>
+                <option value="work">📁 업무 공유</option>
+            </select>
+            <p id="scenario-description" style="margin-top: 10px; color: #666; font-size: 14px;"></p>
+        </div>
+
+        <section class="policy-section">
+            <h2>고정 확장자</h2>
+            <div id="fixed-extensions" class="fixed-container">
+                <p style="color: #999;">불러오는 중...</p>
+            </div>
+        </section>
+
+        <section class="policy-section">
+            <h2>커스텀 확장자 <span id="counter">(0/200)</span></h2>
+            <div style="margin-bottom: 15px;">
+                <input type="text" id="custom-input" placeholder="확장자 입력 (영문 소문자, 숫자만)" maxlength="20">
+                <button id="add-btn">추가</button>
+            </div>
+            <div id="custom-extensions" class="custom-container">
+                <p style="color: #999;">등록된 커스텀 확장자가 없습니다.</p>
+            </div>
+        </section>
+    </div>
+
+    <!-- Scripts at the end of body -->
+    <script src="script/constants.js"></script>
+    <script src="script/index.js"></script>
+</body>
+
+</html>

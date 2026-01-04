@@ -1,0 +1,177 @@
+:root {
+    --primary-color: #4CAF50;
+    --danger-color: #f44336;
+    --border-color: #ddd;
+    --bg-color: #f9f9f9;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f0f2f5;
+    margin: 0;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+}
+
+header {
+    margin-bottom: 30px;
+    border-bottom: 2px solid var(--primary-color);
+    padding-bottom: 10px;
+}
+
+h1 {
+    margin: 0;
+    font-size: 24px;
+    color: #333;
+}
+
+.subtitle {
+    color: #666;
+    font-size: 14px;
+    margin-top: 5px;
+}
+
+.test-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.upload-zone {
+    border: 3px dashed #ddd;
+    border-radius: 12px;
+    padding: 60px 20px;
+    text-align: center;
+    background: #f9f9f9;
+    transition: all 0.3s;
+    cursor: pointer;
+    margin-bottom: 30px;
+}
+
+.upload-zone:hover,
+.upload-zone.dragover {
+    border-color: #007bff;
+    background: #e7f3ff;
+}
+
+.upload-zone.blocked {
+    border-color: #dc3545;
+    background: #ffe7e7;
+}
+
+.upload-zone.allowed {
+    border-color: #28a745;
+    background: #e7ffe7;
+}
+
+.upload-icon {
+    font-size: 48px;
+    margin-bottom: 20px;
+}
+
+.file-input-label {
+    display: inline-block;
+    padding: 12px 24px;
+    background: #007bff;
+    color: white;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.file-input-label:hover {
+    background: #0056b3;
+}
+
+#file-input {
+    display: none;
+}
+
+.results {
+    margin-top: 30px;
+}
+
+.result-item {
+    padding: 15px;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    border-left: 4px solid;
+}
+
+.result-item.allowed {
+    background: #d4edda;
+    border-color: #28a745;
+}
+
+.result-item.blocked {
+    background: #f8d7da;
+    border-color: #dc3545;
+}
+
+.result-filename {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.result-extension {
+    color: #666;
+    font-size: 14px;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: bold;
+    margin-left: 10px;
+}
+
+.status-badge.allowed {
+    background: #28a745;
+    color: white;
+}
+
+.status-badge.blocked {
+    background: #dc3545;
+    color: white;
+}
+
+.policy-summary {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 30px;
+}
+
+.policy-summary h3 {
+    margin-top: 0;
+    color: #333;
+}
+
+.blocked-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.ext-tag {
+    background: #dc3545;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 14px;
+}
+
+.nav-link {
+    display: inline-block;
+    margin-bottom: 20px;
+    color: #007bff;
+    text-decoration: none;
+}
+
+.nav-link:hover {
+    text-decoration: underline;
+}
