@@ -37,7 +37,7 @@ jobs:
         key: ${{ secrets.EC2_SSH_KEY }}
         script: |
           # 프로젝트 경로로 이동 (경로는 실제 서버 환경에 맞게 수정 필요)
-          cd /home/ec2-user/File_Extension_Blocking
+          cd /home/ec2-user/FILE_EXTENTION_BLOCKING
           
           # 최신 코드 받기
           git pull origin ${{ github.ref_name }}
