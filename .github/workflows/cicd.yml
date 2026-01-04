@@ -45,6 +45,9 @@ jobs:
           # 운영 환경 설정 파일 적용 (nginx.prod.conf -> nginx.conf)
           cp nginx.prod.conf nginx.conf
           
+          # 이전 컨테이너 정리 (프로젝트명 변경 등에 대한 안전장치)
+          docker rm -f extension-web extension-was extension-db || true
+          
           # Docker 컨테이너 재빌드 및 실행
           docker compose down
           docker compose up -d --build
