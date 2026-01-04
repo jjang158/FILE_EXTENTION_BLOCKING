@@ -68,6 +68,7 @@ services:
   # Certbot (SSL Certificate)
   certbot:
     image: certbot/certbot
+    profiles: ["certbot"]
     volumes:
       - ./certbot/conf:/etc/letsencrypt
       - ./certbot/www:/var/www/certbot
