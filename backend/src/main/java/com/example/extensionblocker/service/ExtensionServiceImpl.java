@@ -25,6 +25,7 @@ import java.util.stream.Collectors;
  */
 @Service
 @RequiredArgsConstructor
+@Transactional(rollbackFor = Exception.class)
 public class ExtensionServiceImpl implements ExtensionService {
 
     private static final Logger log = LoggerFactory.getLogger(ExtensionServiceImpl.class);
@@ -33,31 +34,13 @@ public class ExtensionServiceImpl implements ExtensionService {
     private final ExtensionRuleMapper ruleMapper;
 
     /**
-     * 특정 네임스페이스의 정책을 조회하거나, 없으면 새로 생성하여 반환합니다.
-     * (Lazy Initialization / On-demand)
-     * 
-     * @param namespace 정책 네임스페이스
-     * @return 정책 객체
-     */
-    private ExtensionPolicy getOrCreatePolicy(String namespace) {
-        return policyMapper.getPolicyByNamespace(namespace)
-                .orElseGet(() -> {
-                    ExtensionPolicy newPolicy = new ExtensionPolicy(namespace, namespace + " Policy");
-                    policyMapper.regExtensionPolicy(newPolicy);
-                    log.info("[getOrCreatePolicy] Created new policy: namespace={}, id={}", namespace,
-                            newPolicy.getId());
-                    return newPolicy;
-                });
-    }
-
-    /**
      * 정책 조회
      * 고정 확장자와 커스텀 확장자 목록 반환
      * 
      * @param namespace 정책 네임스페이스
      * @return 고정/커스텀 확장자 목록
      */
-    @Transactional
+    @Transactional(readOnly = true)
     public PolicyResponse getPolicy(String namespace) {
         Optional<ExtensionPolicy> policyOpt = policyMapper.getPolicyByNamespace(namespace);
         List<ExtensionRule> rules = policyOpt.isPresent()
@@ -89,6 +72,14 @@ public class ExtensionServiceImpl implements ExtensionService {
         return new PolicyResponse(fixed, custom);
     }
 
+    /**
+     * 확장자 차단 규칙 등록 구현
+     * 확장자 유효성 검사 및 정규화 후 DB에 저장
+     * 
+     * @param namespace    정책 네임스페이스
+     * @param type         확장자 유형
+     * @param rawExtension 원본 확장자명
+     */
     @Override
     public void regExtensionRule(String namespace, ExtensionType type, String rawExtension) {
         ExtensionPolicy policy = getOrCreatePolicy(namespace);
@@ -129,12 +120,25 @@ public class ExtensionServiceImpl implements ExtensionService {
         log.info("[regExtensionRule] SUCCESS - Saved extension={} with id={}", extension, newRule.getId());
     }
 
+    /**
+     * 확장자 차단 규칙 삭제 구현
+     * ID를 기반으로 규칙 제거
+     * 
+     * @param id 삭제할 규칙 ID
+     */
     @Override
     public void delExtensionRule(Long id) {
         ruleMapper.delExtensionRuleById(id);
         log.info("[delExtensionRule] SUCCESS - Deleted extension={}", id);
     }
 
+    /**
+     * 파일 업로드 허용 여부 확인
+     * 
+     * @param filename  검증할 파일명
+     * @param namespace 정책 네임스페이스
+     * @return true: 허용, false: 차단
+     */
     @Transactional(readOnly = true)
     public boolean isFileAllowed(String filename, String namespace) {
         if (filename == null || filename.trim().isEmpty()) {
@@ -159,6 +163,32 @@ public class ExtensionServiceImpl implements ExtensionService {
         return !isBlocked; // Blocked면 false(Not Allowed), 아니면 true(Allowed)
     }
 
+    /**
+     * 특정 네임스페이스의 정책을 조회하거나, 없으면 새로 생성하여 반환합니다.
+     * 
+     * @param namespace 정책 네임스페이스
+     * @return 정책 객체
+     */
+    private ExtensionPolicy getOrCreatePolicy(String namespace) {
+        return policyMapper.getPolicyByNamespace(namespace)
+                .orElseGet(() -> {
+                    ExtensionPolicy newPolicy = new ExtensionPolicy(namespace, namespace + " Policy");
+                    policyMapper.regExtensionPolicy(newPolicy);
+                    log.info("[getOrCreatePolicy] Created new policy: namespace={}, id={}", namespace,
+                            newPolicy.getId());
+                    return newPolicy;
+                });
+    }
+
+    /**
+     * 확장자 정규화
+     * - 공백 제거
+     * - 소문자 변환
+     * - 앞에 점(.)이 있으면 제거
+     * 
+     * @param input 원본 확장자 문자열
+     * @return 정규화된 확장자
+     */
     private String normalize(String input) {
         if (input == null)
             return "";
@@ -169,6 +199,12 @@ public class ExtensionServiceImpl implements ExtensionService {
         return clean;
     }
 
+    /**
+     * 파일명에서 확장자 추출
+     * 
+     * @param filename 파일명
+     * @return 추출된 확장자 (소문자), 실패 시 빈 문자열
+     */
     private String extractExtension(String filename) {
         int lastDot = filename.lastIndexOf('.');
         if (lastDot == -1 || lastDot == filename.length() - 1) {

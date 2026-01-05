@@ -17,8 +17,20 @@ public interface ExtensionService {
      */
     PolicyResponse getPolicy(String namespace);
 
+    /**
+     * 확장자 차단 규칙 등록
+     * 
+     * @param namespace    정책 네임스페이스
+     * @param type         확장자 유형 (FIXED/CUSTOM)
+     * @param rawExtension 등록할 확장자명
+     */
     void regExtensionRule(String namespace, ExtensionType type, String rawExtension);
 
+    /**
+     * 확장자 차단 규칙 삭제
+     * 
+     * @param id 삭제할 규칙 ID
+     */
     void delExtensionRule(Long id);
 
     /**
