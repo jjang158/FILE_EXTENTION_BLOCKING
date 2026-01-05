@@ -52,7 +52,10 @@ fileInput.addEventListener('change', (e) => {
 });
 
 // 업로드 영역 클릭 시 파일 선택기 열기
-uploadZone.addEventListener('click', () => {
+// 업로드 영역 클릭 시 파일 선택기 열기
+uploadZone.addEventListener('click', (e) => {
+    // 파일 입력 요소나 라벨을 직접 클릭했을 때는 중복 트리거 방지
+    if (e.target === fileInput || e.target.tagName === 'LABEL') return;
     fileInput.click();
 });
 
