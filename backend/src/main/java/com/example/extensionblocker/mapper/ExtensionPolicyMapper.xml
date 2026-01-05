@@ -3,12 +3,20 @@
 <mapper namespace="com.example.extensionblocker.mapper.ExtensionPolicyMapper">
 
     <insert id="save" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO extension_policy (namespace, description)
-        VALUES (#{namespace}, #{description})
+        INSERT INTO extension_policy 
+        ( namespace
+        , description)
+        VALUES 
+        ( #{namespace}
+        , #{description})
     </insert>
 
     <select id="findByNamespace" resultType="com.example.extensionblocker.entity.ExtensionPolicy">
-        SELECT * FROM extension_policy WHERE namespace = #{namespace}
+        SELECT id
+             , namespace
+             , description
+          FROM extension_policy 
+         WHERE namespace = #{namespace}
     </select>
 
 </mapper>
