@@ -48,7 +48,7 @@ graph TD
     subgraph "Docker Host (Orchestration)"
         subgraph "Presentation Tier (Container: web)"
             Nginx[Nginx Web Server]
-            Static[Static Files (HTML/JS)]
+            Static["Static Files (HTML/JS)"]
         end
 
         subgraph "Application Tier (Container: was)"
