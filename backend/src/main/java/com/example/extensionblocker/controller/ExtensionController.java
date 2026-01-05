@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api")
 @RequiredArgsConstructor
-@CrossOrigin(origins = { "http://localhost:8080", "https://exts-block.nyoung.cloud" })
 public class ExtensionController {
 
     private final ExtensionService extensionService;
