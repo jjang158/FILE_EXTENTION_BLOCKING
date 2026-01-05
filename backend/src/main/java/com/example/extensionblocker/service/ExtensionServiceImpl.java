@@ -8,6 +8,9 @@ import java.util.Optional;
 
 import com.example.extensionblocker.dto.ExtensionDto;
 import com.example.extensionblocker.dto.PolicyResponse;
+import com.example.extensionblocker.exception.BusinessException;
+import com.example.extensionblocker.exception.ErrorCode;
+import com.example.extensionblocker.exception.InvalidRequestException;
 import com.example.extensionblocker.model.ExtensionPolicy;
 import com.example.extensionblocker.model.ExtensionRule;
 import com.example.extensionblocker.type.ExtensionType;
@@ -91,31 +94,31 @@ public class ExtensionServiceImpl implements ExtensionService {
         // 2. Validate Check
         if (type == ExtensionType.CUSTOM) {
             if (extension.length() > ExtensionConst.MAX_EXTENSION_LENGTH) {
-                throw new IllegalArgumentException(
+                throw new InvalidRequestException(
                         "Extension length cannot exceed " + ExtensionConst.MAX_EXTENSION_LENGTH + " characters");
             }
             if (!ExtensionConst.VALID_EXTENSION_PATTERN.matcher(extension).matches()) {
-                throw new IllegalArgumentException("Invalid extension format (only a-z, 0-9 allowed)");
+                throw new InvalidRequestException("Invalid extension format (only a-z, 0-9 allowed)");
             }
 
             // Check if max limit reached
             long customCount = ruleMapper.getCountByPolicyIdAndType(policy.getId(), ExtensionType.CUSTOM);
             if (customCount >= ExtensionConst.MAX_CUSTOM_EXTENSIONS) {
-                throw new IllegalArgumentException(
+                throw new BusinessException(ErrorCode.POLICY_VIOLATION,
                         "Max custom extensions limit (" + ExtensionConst.MAX_CUSTOM_EXTENSIONS + ") reached");
             }
         }
 
         // Check DB for duplicates (Fixed or Custom)
         if (ruleMapper.getRuleByPolicyIdAndExtension(policy.getId(), extension).isPresent()) {
-            throw new IllegalArgumentException("Extension already exists");
+            throw new BusinessException(ErrorCode.ALREADY_EXISTS, "Extension already exists");
         }
 
         // Save new rule
         ExtensionRule newRule = new ExtensionRule(policy.getId(), extension, type);
         int result = ruleMapper.regExtensionRule(newRule);
         if (result != 1) {
-            throw new RuntimeException("Failed to save extension");
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "Failed to save extension");
         }
         log.info("[regExtensionRule] SUCCESS - Saved extension={} with id={}", extension, newRule.getId());
     }

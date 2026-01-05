@@ -133,7 +133,10 @@ async function toggleFixed(item) {
             });
         }
 
-        if (!res.ok) throw new Error('Update failed');
+        if (!res.ok) {
+            const errorData = await res.json();
+            throw new Error(errorData.message);
+        }
 
         // 성공 시 목록 갱신 (ID 동기화를 위해 필수)
         fetchData();
@@ -169,8 +172,8 @@ async function addCustom() {
         });
 
         if (!res.ok) {
-            const errorText = await res.text();
-            throw new Error(errorText || 'Add failed');
+            const errorData = await res.json();
+            throw new Error(errorData.message);
         }
 
         customInput.value = '';  // 입력 필드 초기화
@@ -192,7 +195,10 @@ window.deleteCustom = /**
             const res = await fetch(`${API_BASE}/extensions/${id}`, {
                 method: 'DELETE'
             });
-            if (!res.ok) throw new Error('Delete failed');
+            if (!res.ok) {
+                const errorData = await res.json();
+                throw new Error(errorData.message);
+            }
             fetchData();  // 목록 새로고침
         } catch (err) {
             alert('삭제 실패: ' + err.message);

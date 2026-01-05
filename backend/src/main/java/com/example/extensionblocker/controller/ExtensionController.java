@@ -73,8 +73,5 @@ public class ExtensionController {
      * 잘못된 요청 예외 처리
      * 비즈니스 로직 검증 실패 시 400 오류 반환
      */
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<String> handleBadRequest(IllegalArgumentException e) {
-        return ResponseEntity.badRequest().body(e.getMessage());
-    }
+
 }
