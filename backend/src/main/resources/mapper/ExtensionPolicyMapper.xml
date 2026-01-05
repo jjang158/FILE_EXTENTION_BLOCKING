@@ -2,13 +2,25 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.example.extensionblocker.mapper.ExtensionPolicyMapper">
 
-    <insert id="save" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO extension_policy (namespace, description)
-        VALUES (#{namespace}, #{description})
+    <insert id="regExtensionPolicy" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO extension_policy 
+        ( namespace
+        , description
+        , status)
+        VALUES 
+        ( #{namespace}
+        , #{description}
+        , #{status})
     </insert>
 
-    <select id="findByNamespace" resultType="com.example.extensionblocker.model.ExtensionPolicy">
-        SELECT * FROM extension_policy WHERE namespace = #{namespace}
+    <select id="getPolicyByNamespace" resultType="com.example.extensionblocker.model.ExtensionPolicy">
+        SELECT id
+             , namespace
+             , description
+             , status
+          FROM extension_policy 
+         WHERE namespace = #{namespace}
+           AND status = 'Y'
     </select>
 
 </mapper>

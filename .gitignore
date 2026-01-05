@@ -10,6 +10,7 @@ bin/
 out/
 target/
 .gradle/
+init-ssl.sh
 
 # OS generated files
 .DS_Store

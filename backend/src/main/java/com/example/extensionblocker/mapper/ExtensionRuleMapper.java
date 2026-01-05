@@ -20,7 +20,7 @@ public interface ExtensionRuleMapper {
      * 
      * @param rule 저장할 규칙 객체
      */
-    void save(ExtensionRule rule);
+    int regExtensionRule(ExtensionRule rule);
 
     /**
      * 특정 정책의 모든 규칙 조회
@@ -28,7 +28,7 @@ public interface ExtensionRuleMapper {
      * @param policyId 정책 ID
      * @return 규칙 목록
      */
-    List<ExtensionRule> findByPolicyId(@Param("policyId") Long policyId);
+    List<ExtensionRule> getRulesByPolicyId(@Param("policyId") Long policyId);
 
     /**
      * 정책 ID와 확장자명으로 규칙 조회
@@ -37,7 +37,7 @@ public interface ExtensionRuleMapper {
      * @param extension 확장자명
      * @return 규칙 객체 (Optional)
      */
-    Optional<ExtensionRule> findByPolicyIdAndExtension(@Param("policyId") Long policyId,
+    Optional<ExtensionRule> getRuleByPolicyIdAndExtension(@Param("policyId") Long policyId,
             @Param("extension") String extension);
 
     /**
@@ -47,15 +47,7 @@ public interface ExtensionRuleMapper {
      * @param type     확장자 타입 (FIXED 또는 CUSTOM)
      * @return 규칙 개수
      */
-    long countByPolicyIdAndType(@Param("policyId") Long policyId, @Param("type") ExtensionType type);
-
-    /**
-     * 규칙의 활성화 상태 업데이트
-     * 
-     * @param id       규칙 ID
-     * @param isActive 활성화 여부
-     */
-    void updateActiveStatus(@Param("id") Long id, @Param("isActive") boolean isActive);
+    long getCountByPolicyIdAndType(@Param("policyId") Long policyId, @Param("type") ExtensionType type);
 
     /**
      * ID로 규칙 조회
@@ -63,12 +55,12 @@ public interface ExtensionRuleMapper {
      * @param id 규칙 ID
      * @return 규칙 객체 (Optional)
      */
-    Optional<ExtensionRule> findById(@Param("id") Long id);
+    Optional<ExtensionRule> getRuleById(@Param("id") Long id);
 
     /**
      * 규칙 삭제
      * 
      * @param id 삭제할 규칙 ID
      */
-    void deleteById(@Param("id") Long id);
+    void delExtensionRuleById(@Param("id") Long id);
 }

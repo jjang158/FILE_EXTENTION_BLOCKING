@@ -7,37 +7,63 @@
         <result property="policyId" column="policy_id"/>
         <result property="extension" column="extension"/>
         <result property="type" column="type"/>
-        <result property="isActive" column="is_active"/>
         <result property="createdAt" column="created_at"/>
     </resultMap>
 
-    <insert id="save" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO extension_rule (policy_id, extension, type, is_active, created_at)
-        VALUES (#{policyId}, #{extension}, #{type}, #{isActive}, CURRENT_TIMESTAMP)
+    <insert id="regExtensionRule" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO extension_rule 
+        ( policy_id
+        , extension
+        , type
+        , created_at)
+        VALUES 
+        ( #{policyId}
+        , #{extension}
+        , #{type}
+        , CURRENT_TIMESTAMP)
     </insert>
 
-    <select id="findByPolicyId" resultMap="ExtensionRuleResult">
-        SELECT * FROM extension_rule WHERE policy_id = #{policyId}
+    <select id="getRulesByPolicyId" resultMap="ExtensionRuleResult">
+        SELECT id
+             , policy_id
+             , extension
+             , type
+             , created_at
+          FROM extension_rule 
+         WHERE policy_id = #{policyId}
     </select>
 
-    <select id="findByPolicyIdAndExtension" resultMap="ExtensionRuleResult">
-        SELECT * FROM extension_rule WHERE policy_id = #{policyId} AND extension = #{extension}
+    <select id="getRuleByPolicyIdAndExtension" resultMap="ExtensionRuleResult">
+        SELECT id
+             , policy_id
+             , extension
+             , type
+             , created_at
+          FROM extension_rule 
+         WHERE policy_id = #{policyId} 
+           AND extension = #{extension}
     </select>
 
-    <select id="countByPolicyIdAndType" resultType="long">
-        SELECT COUNT(*) FROM extension_rule WHERE policy_id = #{policyId} AND type = #{type}
+    <select id="getCountByPolicyIdAndType" resultType="long">
+        SELECT COUNT(*) 
+          FROM extension_rule 
+         WHERE policy_id = #{policyId} 
+           AND type = #{type}
     </select>
 
-    <update id="updateActiveStatus">
-        UPDATE extension_rule SET is_active = #{isActive} WHERE id = #{id}
-    </update>
-
-    <select id="findById" resultMap="ExtensionRuleResult">
-        SELECT * FROM extension_rule WHERE id = #{id}
+    <select id="getRuleById" resultMap="ExtensionRuleResult">
+        SELECT id
+             , policy_id
+             , extension
+             , type
+             , created_at
+          FROM extension_rule 
+         WHERE id = #{id}
     </select>
 
-    <delete id="deleteById">
-        DELETE FROM extension_rule WHERE id = #{id}
+    <delete id="delExtensionRuleById">
+        DELETE FROM extension_rule 
+         WHERE id = #{id}
     </delete>
 
 </mapper>

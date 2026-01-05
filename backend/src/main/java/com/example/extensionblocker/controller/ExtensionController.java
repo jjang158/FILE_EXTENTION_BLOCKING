@@ -3,6 +3,8 @@ package com.example.extensionblocker.controller;
 import com.example.extensionblocker.dto.ExtensionRequest;
 import com.example.extensionblocker.dto.PolicyResponse;
 import com.example.extensionblocker.service.ExtensionService;
+import com.example.extensionblocker.type.ExtensionType;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,7 +16,6 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*") // 개발 환경을 위한 CORS 허용
 public class ExtensionController {
 
     private final ExtensionService extensionService;
@@ -37,9 +38,9 @@ public class ExtensionController {
      * @param extension 토글할 확장자명
      * @return 성공 응답
      */
-    @PostMapping("/policies/{namespace}/fixed/{extension}/toggle")
-    public ResponseEntity<Void> toggleFixed(@PathVariable String namespace, @PathVariable String extension) {
-        extensionService.toggleFixed(namespace, extension);
+    @PostMapping("/policies/{namespace}/fixed")
+    public ResponseEntity<Void> toggleFixed(@PathVariable String namespace, @RequestBody ExtensionRequest request) {
+        extensionService.regExtensionRule(namespace, ExtensionType.FIXED, request.getExtension());
         return ResponseEntity.ok().build();
     }
 
@@ -52,7 +53,7 @@ public class ExtensionController {
      */
     @PostMapping("/policies/{namespace}/custom")
     public ResponseEntity<Void> addCustom(@PathVariable String namespace, @RequestBody ExtensionRequest request) {
-        extensionService.addCustom(namespace, request.getExtension());
+        extensionService.regExtensionRule(namespace, ExtensionType.CUSTOM, request.getExtension());
         return ResponseEntity.ok().build();
     }
 
@@ -64,7 +65,7 @@ public class ExtensionController {
      */
     @DeleteMapping("/extensions/{id}")
     public ResponseEntity<Void> deleteCustom(@PathVariable Long id) {
-        extensionService.deleteCustom(id);
+        extensionService.delExtensionRule(id);
         return ResponseEntity.ok().build();
     }
 
@@ -72,8 +73,5 @@ public class ExtensionController {
      * 잘못된 요청 예외 처리
      * 비즈니스 로직 검증 실패 시 400 오류 반환
      */
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<String> handleBadRequest(IllegalArgumentException e) {
-        return ResponseEntity.badRequest().body(e.getMessage());
-    }
+
 }

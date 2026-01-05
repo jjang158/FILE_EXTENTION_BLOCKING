@@ -37,12 +37,6 @@ public class ExtensionRule {
     private ExtensionType type;
 
     /**
-     * 차단 활성화 여부
-     * true: 차단함, false: 허용함
-     */
-    private boolean isActive;
-
-    /**
      * 생성 일시
      */
     private LocalDateTime createdAt;
@@ -58,5 +52,6 @@ public class ExtensionRule {
         this.policyId = policyId;
         this.extension = extension;
         this.type = type;
+        this.createdAt = LocalDateTime.now();
     }
 }

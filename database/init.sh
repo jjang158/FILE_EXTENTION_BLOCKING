@@ -23,6 +23,7 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
     CREATE TABLE IF NOT EXISTS extension_policy (
         id BIGSERIAL PRIMARY KEY,
         namespace VARCHAR(50) NOT NULL UNIQUE,
+        status CHAR(1) DEFAULT 'Y',
         description VARCHAR(255)
     );
 
@@ -32,7 +33,6 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
         policy_id BIGINT NOT NULL,
         extension VARCHAR(20) NOT NULL,
         type VARCHAR(10) NOT NULL,
-        is_active BOOLEAN DEFAULT TRUE,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         CONSTRAINT fk_policy FOREIGN KEY (policy_id) REFERENCES extension_policy(id) ON DELETE CASCADE,
         CONSTRAINT uk_policy_extension UNIQUE (policy_id, extension)
