@@ -7,12 +7,12 @@ package com.example.extensionblocker.type;
  */
 public enum ExtensionType {
     /**
-     * 고정 확장자 (관리자가 미리 정의한 7개)
+     * 고정 확장자
      */
     FIXED,
 
     /**
-     * 커스텀 확장자 (사용자가 직접 추가)
+     * 커스텀 확장자
      */
     CUSTOM
 }
