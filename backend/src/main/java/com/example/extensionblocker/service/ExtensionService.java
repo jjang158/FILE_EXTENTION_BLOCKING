@@ -1,6 +1,7 @@
 package com.example.extensionblocker.service;
 
 import com.example.extensionblocker.dto.PolicyResponse;
+import com.example.extensionblocker.type.ExtensionType;
 
 /**
  * 확장자 차단 서비스 인터페이스
@@ -16,28 +17,9 @@ public interface ExtensionService {
      */
     PolicyResponse getPolicy(String namespace);
 
-    /**
-     * 고정 확장자의 활성화 상태 토글
-     * 
-     * @param namespace 정책 네임스페이스
-     * @param extension 토글할 확장자명
-     */
-    void toggleFixed(String namespace, String extension);
+    void regExtensionRule(String namespace, ExtensionType type, String rawExtension);
 
-    /**
-     * 커스텀 확장자 추가
-     * 
-     * @param namespace 정책 네임스페이스
-     * @param extension 추가할 확장자명
-     */
-    void addCustom(String namespace, String extension);
-
-    /**
-     * 커스텀 확장자 삭제
-     * 
-     * @param id 삭제할 규칙 ID
-     */
-    void deleteCustom(Long id);
+    void delExtensionRule(Long id);
 
     /**
      * 파일 업로드 허용 여부 확인

@@ -29,7 +29,7 @@ async function loadBlockedExtensions() {
         const data = await res.json();
 
         // 고정 확장자와 커스텀 확장자 모두에서 차단된 것들 추출
-        const blockedFixed = data.fixed.filter(f => f.checked).map(f => f.name);
+        const blockedFixed = data.fixed.filter(f => f.active).map(f => f.name);
         const blockedCustom = data.custom.filter(c => c.active).map(c => c.name);
         const blockedExts = [...blockedFixed, ...blockedCustom];
 

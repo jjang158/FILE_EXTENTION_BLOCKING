@@ -18,7 +18,7 @@ public interface ExtensionPolicyMapper {
      * 
      * @param policy 저장할 정책 객체
      */
-    void save(ExtensionPolicy policy);
+    void regExtensionPolicy(ExtensionPolicy policy);
 
     /**
      * 네임스페이스로 정책 조회
@@ -26,5 +26,5 @@ public interface ExtensionPolicyMapper {
      * @param namespace 정책 네임스페이스 (예: "chat", "work")
      * @return 정책 객체 (Optional)
      */
-    Optional<ExtensionPolicy> findByNamespace(@Param("namespace") String namespace);
+    Optional<ExtensionPolicy> getPolicyByNamespace(@Param("namespace") String namespace);
 }
