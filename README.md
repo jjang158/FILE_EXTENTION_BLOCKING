@@ -86,14 +86,15 @@ graph TD
 erDiagram
     EXTENSION_POLICY {
         bigint id PK "정책 고유 ID"
-        varchar(50) namespace UK "정책 네임스페이스 (Unique)"
-        timestamp created_at "생성 일시"
+        varchar(50) namespace "정책 네임스페이스"
+        char(1) status "상태 (Y/N)"
+        varchar(255) description "설명"
     }
 
     EXTENSION_RULE {
         bigint id PK "규칙 고유 ID"
         bigint policy_id FK "정책 ID (Foreign Key)"
-        varchar(20) extension_name "확장자명"
+        varchar(20) extension "확장자명"
         varchar(10) type "규칙 유형 (FIXED/CUSTOM)"
         timestamp created_at "생성 일시"
     }
@@ -102,9 +103,8 @@ erDiagram
 ```
 
 ### 주요 제약 조건 (Constraints)
-1.  **Unique Namespace**: `extension_policy` 테이블의 `namespace`는 유일해야 합니다.
-2.  **Prevent Duplicates**: `extension_rule` 테이블에서 `(policy_id, extension_name)` 복합 유니크 제약조건을 설정하여, 하나의 정책 내에서 동일한 확장자가 중복 등록되는 것을 DB 레벨에서 차단합니다.
-3.  **Cascade Delete**: 정책 삭제 시 해당 정책에 속한 모든 규칙도 함께 삭제됩니다.
+1.  **Prevent Duplicates**: `extension_rule` 테이블에서 `(policy_id, extension_name)` 복합 유니크 제약조건을 설정하여, 하나의 정책 내에서 동일한 확장자가 중복 등록되는 것을 DB 레벨에서 차단합니다.
+2.  **Cascade Delete**: 정책 삭제 시 해당 정책에 속한 모든 규칙도 함께 삭제됩니다.
 
 ---
 
