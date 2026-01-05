@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/validate")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
 public class ValidateController {
 
     private static final Logger log = LoggerFactory.getLogger(ValidateController.class);

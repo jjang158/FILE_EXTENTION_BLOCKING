@@ -4,8 +4,13 @@ import java.util.List;
 import com.example.extensionblocker.constrant.ExtensionConst;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import java.util.Optional;
 
+import com.example.extensionblocker.dto.ExtensionDto;
 import com.example.extensionblocker.dto.PolicyResponse;
+import com.example.extensionblocker.exception.BusinessException;
+import com.example.extensionblocker.exception.ErrorCode;
+import com.example.extensionblocker.exception.InvalidRequestException;
 import com.example.extensionblocker.model.ExtensionPolicy;
 import com.example.extensionblocker.model.ExtensionRule;
 import com.example.extensionblocker.type.ExtensionType;
@@ -15,7 +20,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import jakarta.annotation.PostConstruct;
 import java.util.stream.Collectors;
 
 /**
@@ -24,54 +28,13 @@ import java.util.stream.Collectors;
  */
 @Service
 @RequiredArgsConstructor
+@Transactional(rollbackFor = Exception.class)
 public class ExtensionServiceImpl implements ExtensionService {
 
     private static final Logger log = LoggerFactory.getLogger(ExtensionServiceImpl.class);
 
     private final ExtensionPolicyMapper policyMapper;
     private final ExtensionRuleMapper ruleMapper;
-
-    /**
-     * 애플리케이션 시작 시 초기화
-     * 여러 시나리오(chat, work)의 기본 정책과 고정 확장자를 설정
-     */
-    @PostConstruct
-    @Transactional
-    public void init() {
-        // 여러 시나리오 초기화
-        initPolicyIfNotExists("chat", "Chat Feature Policy");
-        initPolicyIfNotExists("work", "Work Sharing Feature Policy");
-    }
-
-    /**
-     * 특정 네임스페이스의 정책이 없으면 새로 생성하고 고정 확장자 초기화
-     * 
-     * @param namespace   정책 네임스페이스
-     * @param description 정책 설명
-     */
-    private void initPolicyIfNotExists(String namespace, String description) {
-        log.info("[init] Initializing policy for namespace={}", namespace);
-
-        // 정책 초기화
-        ExtensionPolicy policy = policyMapper.findByNamespace(namespace)
-                .orElseGet(() -> {
-                    ExtensionPolicy newPolicy = new ExtensionPolicy(namespace, description);
-                    policyMapper.save(newPolicy);
-                    log.info("[init] Created new policy: namespace={}, id={}", namespace, newPolicy.getId());
-                    return newPolicy;
-                });
-
-        // 고정 확장자 7개 초기화 (기본값: 비활성화)
-        for (String ext : ExtensionConst.DEFAULT_FIXED_EXTENSIONS) {
-            if (ruleMapper.findByPolicyIdAndExtension(policy.getId(), ext).isEmpty()) {
-                ExtensionRule rule = new ExtensionRule(policy.getId(), ext, ExtensionType.FIXED);
-                rule.setActive(false); // 요구사항: 기본은 체크 해제 상태
-                ruleMapper.save(rule);
-            }
-        }
-
-        log.info("[init] Policy initialization complete for namespace={}", namespace);
-    }
 
     /**
      * 정책 조회
@@ -82,135 +45,103 @@ public class ExtensionServiceImpl implements ExtensionService {
      */
     @Transactional(readOnly = true)
     public PolicyResponse getPolicy(String namespace) {
-        ExtensionPolicy policy = getPolicyOrThrow(namespace);
-        List<ExtensionRule> rules = ruleMapper.findByPolicyId(policy.getId());
+        Optional<ExtensionPolicy> policyOpt = policyMapper.getPolicyByNamespace(namespace);
+        List<ExtensionRule> rules = policyOpt.isPresent()
+                ? ruleMapper.getRulesByPolicyId(policyOpt.get().getId())
+                : java.util.Collections.emptyList();
 
-        // 고정 확장자 목록 생성
-        List<PolicyResponse.FixedExtensionDto> fixed = rules.stream()
-                .filter(r -> r.getType() == ExtensionType.FIXED)
-                .map(r -> new PolicyResponse.FixedExtensionDto(r.getExtension(), r.isActive()))
+        // 고정 확장자 처리
+        // DB에 있으면 차단(isActive=true), 없으면 허용(isActive=false)
+        List<ExtensionDto> fixed = ExtensionConst.DEFAULT_FIXED_EXTENSIONS.stream()
+                .map(ext -> {
+                    Optional<ExtensionRule> match = rules.stream()
+                            .filter(r -> r.getType() == ExtensionType.FIXED && r.getExtension().equals(ext))
+                            .findFirst();
+
+                    if (match.isPresent()) {
+                        return new ExtensionDto(match.get().getId(), ext, true);
+                    } else {
+                        return new ExtensionDto(null, ext, false);
+                    }
+                })
                 .collect(Collectors.toList());
 
-        // 커스텀 확장자 목록 생성
-        List<PolicyResponse.CustomExtensionDto> custom = rules.stream()
+        // 커스텀 확장자 목록 생성 (DB에 있는 것만)
+        List<ExtensionDto> custom = rules.stream()
                 .filter(r -> r.getType() == ExtensionType.CUSTOM)
-                .map(r -> new PolicyResponse.CustomExtensionDto(r.getId(), r.getExtension(), r.isActive()))
+                .map(r -> new ExtensionDto(r.getId(), r.getExtension(), true))
                 .collect(Collectors.toList());
 
         return new PolicyResponse(fixed, custom);
     }
 
     /**
-     * 고정 확장자의 활성화 상태 토글 (차단/허용 전환)
+     * 확장자 차단 규칙 등록 구현
+     * 확장자 유효성 검사 및 정규화 후 DB에 저장
      * 
-     * @param namespace 정책 네임스페이스
-     * @param extension 토글할 확장자명
+     * @param namespace    정책 네임스페이스
+     * @param type         확장자 유형
+     * @param rawExtension 원본 확장자명
      */
-    @Transactional
-    public void toggleFixed(String namespace, String extension) {
-        log.info("[toggleFixed] START - namespace={}, extension={}", namespace, extension);
-
-        ExtensionPolicy policy = getPolicyOrThrow(namespace);
-        log.debug("[toggleFixed] Found policy id={}", policy.getId());
-
-        ExtensionRule rule = ruleMapper.findByPolicyIdAndExtension(policy.getId(), extension)
-                .orElseThrow(() -> new IllegalArgumentException("Fixed extension not found: " + extension));
-
-        log.debug("[toggleFixed] Found rule id={}, current isActive={}", rule.getId(), rule.isActive());
-
-        if (rule.getType() != ExtensionType.FIXED) {
-            throw new IllegalArgumentException("Target is not a fixed extension");
-        }
-
-        // 상태 토글 및 업데이트
-        boolean newStatus = !rule.isActive();
-        log.info("[toggleFixed] Updating rule id={} from isActive={} to isActive={}",
-                rule.getId(), rule.isActive(), newStatus);
-
-        ruleMapper.updateActiveStatus(rule.getId(), newStatus);
-        log.info("[toggleFixed] SUCCESS - Updated extension={} to isActive={}", extension, newStatus);
-    }
-
-    @Transactional
-    public void addCustom(String namespace, String rawExtension) {
-        log.info("[addCustom] START - namespace={}, rawExtension={}", namespace, rawExtension);
-
-        ExtensionPolicy policy = getPolicyOrThrow(namespace);
-        log.debug("[addCustom] Found policy id={}", policy.getId());
+    @Override
+    public void regExtensionRule(String namespace, ExtensionType type, String rawExtension) {
+        ExtensionPolicy policy = getOrCreatePolicy(namespace);
+        log.debug("[regExtensionRule] Found policy id={}", policy.getId());
 
         // 1. Normalize
         String extension = normalize(rawExtension);
 
-        // 2. Validate Format
-        if (extension.length() > ExtensionConst.MAX_EXTENSION_LENGTH) {
-            throw new IllegalArgumentException(
-                    "Extension length cannot exceed " + ExtensionConst.MAX_EXTENSION_LENGTH + " characters");
-        }
-        if (!ExtensionConst.VALID_EXTENSION_PATTERN.matcher(extension).matches()) {
-            throw new IllegalArgumentException("Invalid extension format (only a-z, 0-9 allowed)");
-        }
+        // 2. Validate Check
+        if (type == ExtensionType.CUSTOM) {
+            if (extension.length() > ExtensionConst.MAX_EXTENSION_LENGTH) {
+                throw new InvalidRequestException(
+                        "Extension length cannot exceed " + ExtensionConst.MAX_EXTENSION_LENGTH + " characters");
+            }
+            if (!ExtensionConst.VALID_EXTENSION_PATTERN.matcher(extension).matches()) {
+                throw new InvalidRequestException("Invalid extension format (only a-z, 0-9 allowed)");
+            }
 
-        // 3. Conflict Check (Fixed vs Custom)
-        if (ExtensionConst.DEFAULT_FIXED_EXTENSIONS.contains(extension)) {
-            throw new IllegalArgumentException("Extension is defined in fixed list. Please toggle it there.");
+            // Check if max limit reached
+            long customCount = ruleMapper.getCountByPolicyIdAndType(policy.getId(), ExtensionType.CUSTOM);
+            if (customCount >= ExtensionConst.MAX_CUSTOM_EXTENSIONS) {
+                throw new BusinessException(ErrorCode.POLICY_VIOLATION,
+                        "Max custom extensions limit (" + ExtensionConst.MAX_CUSTOM_EXTENSIONS + ") reached");
+            }
         }
 
         // Check DB for duplicates (Fixed or Custom)
-        if (ruleMapper.findByPolicyIdAndExtension(policy.getId(), extension).isPresent()) {
-            throw new IllegalArgumentException("Extension already exists");
+        if (ruleMapper.getRuleByPolicyIdAndExtension(policy.getId(), extension).isPresent()) {
+            throw new BusinessException(ErrorCode.ALREADY_EXISTS, "Extension already exists");
         }
 
-        // 4. Limit Check
-        long customCount = ruleMapper.countByPolicyIdAndType(policy.getId(), ExtensionType.CUSTOM);
-        if (customCount >= ExtensionConst.MAX_CUSTOM_EXTENSIONS) {
-            throw new IllegalArgumentException(
-                    "Max custom extensions limit (" + ExtensionConst.MAX_CUSTOM_EXTENSIONS + ") reached");
+        // Save new rule
+        ExtensionRule newRule = new ExtensionRule(policy.getId(), extension, type);
+        int result = ruleMapper.regExtensionRule(newRule);
+        if (result != 1) {
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "Failed to save extension");
         }
-
-        // 5. Save
-        ExtensionRule rule = new ExtensionRule(policy.getId(), extension, ExtensionType.CUSTOM);
-        rule.setActive(true); // Custom extensions are active by default
-
-        log.info("[addCustom] Saving custom extension={}, policyId={}, isActive=true", extension, policy.getId());
-
-        ruleMapper.save(rule);
-        log.info("[addCustom] SUCCESS - Saved custom extension={} with id={}", extension, rule.getId());
+        log.info("[regExtensionRule] SUCCESS - Saved extension={} with id={}", extension, newRule.getId());
     }
 
-    @Transactional
-    public void deleteCustom(Long id) {
-        log.info("[deleteCustom] START - id={}", id);
-
-        ExtensionRule rule = ruleMapper.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Rule not found"));
-
-        log.debug("[deleteCustom] Found rule id={}, extension={}, type={}",
-                rule.getId(), rule.getExtension(), rule.getType());
-
-        if (rule.getType() != ExtensionType.CUSTOM) {
-            throw new IllegalArgumentException("Cannot delete fixed rule");
-        }
-
-        log.info("[deleteCustom] Deleting custom extension={}", rule.getExtension());
-        ruleMapper.deleteById(id);
-        log.info("[deleteCustom] SUCCESS - Deleted extension={}", rule.getExtension());
+    /**
+     * 확장자 차단 규칙 삭제 구현
+     * ID를 기반으로 규칙 제거
+     * 
+     * @param id 삭제할 규칙 ID
+     */
+    @Override
+    public void delExtensionRule(Long id) {
+        ruleMapper.delExtensionRuleById(id);
+        log.info("[delExtensionRule] SUCCESS - Deleted extension={}", id);
     }
 
-    private ExtensionPolicy getPolicyOrThrow(String namespace) {
-        return policyMapper.findByNamespace(namespace)
-                .orElseThrow(() -> new IllegalArgumentException("Policy not found: " + namespace));
-    }
-
-    private String normalize(String input) {
-        if (input == null)
-            return "";
-        String clean = input.trim().toLowerCase();
-        if (clean.startsWith(".")) {
-            clean = clean.substring(1);
-        }
-        return clean;
-    }
-
+    /**
+     * 파일 업로드 허용 여부 확인
+     * 
+     * @param filename  검증할 파일명
+     * @param namespace 정책 네임스페이스
+     * @return true: 허용, false: 차단
+     */
     @Transactional(readOnly = true)
     public boolean isFileAllowed(String filename, String namespace) {
         if (filename == null || filename.trim().isEmpty()) {
@@ -224,17 +155,59 @@ public class ExtensionServiceImpl implements ExtensionService {
         }
 
         // Get policy
-        ExtensionPolicy policy = policyMapper.findByNamespace(namespace).orElse(null);
+        ExtensionPolicy policy = policyMapper.getPolicyByNamespace(namespace).orElse(null);
         if (policy == null) {
             return true; // No policy = allowed
         }
 
-        // Check if extension is actively blocked
-        return ruleMapper.findByPolicyIdAndExtension(policy.getId(), extension)
-                .map(rule -> !rule.isActive()) // If rule exists and is active, block (return false)
-                .orElse(true); // If no rule exists, allow
+        // Check if extension is actively blocked (Presence in DB = Blocked)
+        boolean isBlocked = ruleMapper.getRuleByPolicyIdAndExtension(policy.getId(), extension).isPresent();
+
+        return !isBlocked; // Blocked면 false(Not Allowed), 아니면 true(Allowed)
     }
 
+    /**
+     * 특정 네임스페이스의 정책을 조회하거나, 없으면 새로 생성하여 반환합니다.
+     * 
+     * @param namespace 정책 네임스페이스
+     * @return 정책 객체
+     */
+    private ExtensionPolicy getOrCreatePolicy(String namespace) {
+        return policyMapper.getPolicyByNamespace(namespace)
+                .orElseGet(() -> {
+                    ExtensionPolicy newPolicy = new ExtensionPolicy(namespace, namespace + " Policy");
+                    policyMapper.regExtensionPolicy(newPolicy);
+                    log.info("[getOrCreatePolicy] Created new policy: namespace={}, id={}", namespace,
+                            newPolicy.getId());
+                    return newPolicy;
+                });
+    }
+
+    /**
+     * 확장자 정규화
+     * - 공백 제거
+     * - 소문자 변환
+     * - 앞에 점(.)이 있으면 제거
+     * 
+     * @param input 원본 확장자 문자열
+     * @return 정규화된 확장자
+     */
+    private String normalize(String input) {
+        if (input == null)
+            return "";
+        String clean = input.trim().toLowerCase();
+        if (clean.startsWith(".")) {
+            clean = clean.substring(1);
+        }
+        return clean;
+    }
+
+    /**
+     * 파일명에서 확장자 추출
+     * 
+     * @param filename 파일명
+     * @return 추출된 확장자 (소문자), 실패 시 빈 문자열
+     */
     private String extractExtension(String filename) {
         int lastDot = filename.lastIndexOf('.');
         if (lastDot == -1 || lastDot == filename.length() - 1) {
@@ -242,4 +215,5 @@ public class ExtensionServiceImpl implements ExtensionService {
         }
         return filename.substring(lastDot + 1).toLowerCase();
     }
+
 }

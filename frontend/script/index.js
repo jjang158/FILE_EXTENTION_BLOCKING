@@ -82,8 +82,8 @@ function renderFixed(list) {
 
         const checkbox = document.createElement('input');
         checkbox.type = 'checkbox';
-        checkbox.checked = item.checked;
-        checkbox.addEventListener('change', () => toggleFixed(item.name));
+        checkbox.checked = item.active;
+        checkbox.addEventListener('change', () => toggleFixed(item));
 
         label.appendChild(checkbox);
         label.appendChild(document.createTextNode(` ${item.name}`));
@@ -112,21 +112,37 @@ function renderCustom(list) {
 
 /**
  * 고정 확장자의 차단 상태를 토글 (체크/체크 해제)
- * @param {string} name - 토글할 확장자 이름
+ * @param {Object} item - 토글할 확장자 객체 (id, name, active)
  */
-async function toggleFixed(name) {
+async function toggleFixed(item) {
     try {
-        const res = await fetch(`${API_BASE}/policies/${currentNamespace}/fixed/${name}/toggle`, {
-            method: 'POST'
-        });
-        if (!res.ok) throw new Error('Update failed');
+        let res;
+        if (item.active) {
+            // 이미 차단됨(active) -> 차단 해제 (DELETE)
+            // item.id가 존재해야 함
+            if (!item.id) throw new Error('ID not found for active item');
+            res = await fetch(`${API_BASE}/extensions/${item.id}`, {
+                method: 'DELETE'
+            });
+        } else {
+            // 차단 안 됨(!active) -> 차단 (POST)
+            res = await fetch(`${API_BASE}/policies/${currentNamespace}/fixed`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ extension: item.name })
+            });
+        }
 
-        // fetchData() 호출 제거 - 체크박스 상태는 자연스럽게 변경
-        // 목록 re-render 방지로 순서 유지
+        if (!res.ok) {
+            const errorData = await res.json();
+            throw new Error(errorData.message);
+        }
+
+        // 성공 시 목록 갱신 (ID 동기화를 위해 필수)
+        fetchData();
     } catch (err) {
         alert('업데이트 실패: ' + err.message);
-        // 오류 시에만 재로드하여 올바른 상태 복구
-        fetchData();
+        fetchData(); // 상태 복구
     }
 }
 
@@ -156,8 +172,8 @@ async function addCustom() {
         });
 
         if (!res.ok) {
-            const errorText = await res.text();
-            throw new Error(errorText || 'Add failed');
+            const errorData = await res.json();
+            throw new Error(errorData.message);
         }
 
         customInput.value = '';  // 입력 필드 초기화
@@ -179,7 +195,10 @@ window.deleteCustom = /**
             const res = await fetch(`${API_BASE}/extensions/${id}`, {
                 method: 'DELETE'
             });
-            if (!res.ok) throw new Error('Delete failed');
+            if (!res.ok) {
+                const errorData = await res.json();
+                throw new Error(errorData.message);
+            }
             fetchData();  // 목록 새로고침
         } catch (err) {
             alert('삭제 실패: ' + err.message);

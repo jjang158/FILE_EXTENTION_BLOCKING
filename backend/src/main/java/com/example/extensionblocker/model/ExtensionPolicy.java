@@ -30,6 +30,11 @@ public class ExtensionPolicy {
     private String description;
 
     /**
+     * 정책 상태 (Y/N)
+     */
+    private String status;
+
+    /**
      * ID를 제외한 생성자
      * 
      * @param namespace   정책 네임스페이스
@@ -38,5 +43,6 @@ public class ExtensionPolicy {
     public ExtensionPolicy(String namespace, String description) {
         this.namespace = namespace;
         this.description = description;
+        this.status = "Y";
     }
 }
